@@ -1,5 +1,9 @@
 package org.locutusque.CL;
 
+import org.locutusque.CL.Exceptions.CLException;
+import org.locutusque.CL.Exceptions.NoSuchObjectError;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +35,7 @@ public class Dynamic {
         }
     }
 
-    public void invokeMethod(Object obj, String methodName, Object... args) throws Exception {
+    public void invokeMethod(Object obj, String methodName, Object... args) throws CLException, InvocationTargetException, IllegalAccessException {
         Class<?> cls = obj.getClass();
         Method method = getMethod(cls, methodName, getParameterTypes(args));
         method.setAccessible(true);
@@ -47,14 +51,14 @@ public class Dynamic {
         return methods;
     }
 
-    private Method getMethod(Class<?> cls, String methodName, Class<?>[] parameterTypes) throws NoSuchMethodException {
+    private Method getMethod(Class<?> cls, String methodName, Class<?>[] parameterTypes) throws NoSuchObjectError {
         Method[] methods = getMethods(cls);
         for (Method method : methods) {
             if (method.getName().equals(methodName) && parameterTypesMatch(method.getParameterTypes(), parameterTypes)) {
                 return method;
             }
         }
-        throw new NoSuchMethodException("Method not found: " + methodName);
+        throw new NoSuchObjectError("Method not found in class " + cls.getName() + ":" + methodName);
     }
 
     private boolean parameterTypesMatch(Class<?>[] parameterTypes1, Class<?>[] parameterTypes2) {

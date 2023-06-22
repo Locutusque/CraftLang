@@ -82,6 +82,7 @@ public class CraftLang {
         put("STR[]", "String[]");
         put("str[]", "String[]");
         put("DYNAMIC", "org.locutusque.CL.Dynamic");
+        put("CLIMPORT", "org.locutusque.CL.Import.importClass( ");
     }};
 
 
@@ -91,7 +92,7 @@ public class CraftLang {
      * @return the Java translated code
      * @throws Exception for unexpected parentheses
      */
-    private static String interpretProgram(List<String> program) throws Exception {
+    static String interpretProgram(List<String> program) throws Exception {
         StringBuilder translatedProgram = new StringBuilder();
         // Stack to keep track of open parentheses and open braces
         Stack<Character> openParenthesesStack = new Stack<>();
@@ -309,7 +310,7 @@ public class CraftLang {
     /**
      *
      * @param packagePath The package that you want to compile
-     * @return Not recommended for personal use, see importCLPackage() instead
+     * @return Not recommended for personal use, see the Import class instead
      * @throws Exception if the package does not exist
      */
     public static String getPackage(String packagePath) throws Exception {
@@ -331,6 +332,7 @@ public class CraftLang {
         writer.close();
 
         return scriptDir + "\\packages\\CraftLangCache.java";
+
     }
 
     /**
@@ -359,20 +361,6 @@ public class CraftLang {
         }
         return instance;
     }
-    /*public static Object importCLPackage(String filePath, String className) throws Exception {
-        String importFilePath = getPackage(filePath);
-        File file = new File(importFilePath);
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                lines.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }*/
     public static void main(String[] args) throws Exception, SyntaxError {
         System.out.println("Starting CraftLang!");
         switch (args[0]) {
@@ -414,6 +402,25 @@ public class CraftLang {
             return false;
         }
         return success;
+    }
+    static class CLClassLoader extends ClassLoader {
+        private String classPath;
+
+        public CLClassLoader(String classPath) {
+            this.classPath = classPath;
+        }
+        @Override
+        public Class<?> loadClass(String className) throws ClassNotFoundException {
+            try {
+                byte[] classBytes = Files.readAllBytes(Paths.get(classPath + "/packages/CraftLangCache.class"));
+                return defineClass(className, classBytes, 0, classBytes.length);
+            } catch (IOException e) {
+                throw new ClassNotFoundException("Failed to load class: " + className, e);
+            }
+        }
+        public Class<?> CLclassLoad(String className) throws ClassNotFoundException {
+            return loadClass(className);
+        }
     }
 
 }
